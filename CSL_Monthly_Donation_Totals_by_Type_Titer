@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 7.1.0.final using JasperReports Library version 6.4.3  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CSL Donation Totals by Type" pageWidth="799" pageHeight="802" columnWidth="799" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" isIgnorePagination="true" uuid="199f49cd-6fef-449b-9bb8-6b9d7519a3d1">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="ireport.jasperserver.url" value="https://nextgenprd-rpt.cslg1.cslg.net/jasperserver-pro/"/>
+	<property name="ireport.jasperserver.user" value="aaron.a.houtsma1"/>
+	<property name="ireport.jasperserver.report.resource" value="/public/CSL_NextGen_Sandbox_Reports/CSL_Donation_Totals_by_Type_files/Donation Totals by Type excel"/>
+	<property name="ireport.jasperserver.reportUnit" value="/CSL_Monitoring_Queries/CSL_Monthly_Donation_Totals_by_Type"/>
+	<property name="com.jaspersoft.studio.report.unit.description" value="VD01 A report version that runs monthly for all centers for the previous month."/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="NG PRD"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<queryString>
+		<![CDATA[with Donations as ( --Gets the donations/donor/volume totals by center and program type from the previous month.
+SELECT 
+NGOWNER.COL$COLLECTIONS.SITE_ID"Center Code", 
+to_date(to_char((add_months(sysdate,-1)),'MM/YYYY'),'MM/YYYY')"FirstDate",
+to_date(to_char((add_months(sysdate,-0)),'MM/YYYY'),'MM/YYYY')-1"LastDate",
+count(distinct NGOWNER.COL$COLLECTIONS.DONOR_NUMBER)"Donors",
+count(distinct NGOWNER.COL$UNITS.UNIT_NUM)"Donations", 
+sum(NGOWNER.COL$UNITS.VOLUME)/1000"Volume",    
+NGOWNER.COL$COLLECTION_TYPE_CODES.name"Donation Type",
+NGOWNER.COL$COLLECTION_TYPE_CODES.CODE"Collection Code"
+FROM NGOWNER.COL$UNITS,
+NGOWNER.COL$COLLECTION_TYPE_CODES,
+NGOWNER.COL$COLLECTIONS
+where
+NGOWNER.COL$COLLECTION_TYPE_CODES.ID = NGOWNER.COL$COLLECTIONS.COLLTYPE_ID
+and NGOWNER.COL$COLLECTIONS.COLL_NUM = NGOWNER.COL$UNITS.UNIT_NUM
+and NGOWNER.COL$UNITS.WAS_UNIT_DRAWN = 1
+and NGOWNER.COL$COLLECTION_TYPE_CODES.CODE in (
+'75017',
+'75024',
+'75027',
+'75031',
+'75034',
+'75084'
+
+)
+and trunc(NGOWNER.COL$COLLECTIONS.COLLECTION_DATE) between to_date(to_char((add_months(sysdate,-1)),'MM/YYYY'),'MM/YYYY') and to_date(to_char((add_months(sysdate,-0)),'MM/YYYY'),'MM/YYYY')-1
+group by
+NGOWNER.COL$COLLECTIONS.SITE_ID,
+to_date(to_char((add_months(sysdate,-1)),'MM/YYYY'),'MM/YYYY'),
+to_date(to_char((add_months(sysdate,-0)),'MM/YYYY'),'MM/YYYY')-1,
+NGOWNER.COL$COLLECTION_TYPE_CODES.name,
+NGOWNER.COL$COLLECTION_TYPE_CODES.CODE
+order by 7),
+
+titers as (  --gets the average titer results from the previous month by center
+SELECT distinct 
+C.SITE_ID"TCenter Code",
+to_char(NGOWNER.COL$TEST_RESULTS.TEST_DATE,'MM')"Test Month",
+to_char(NGOWNER.COL$TEST_RESULTS.TEST_DATE,'YYYY')"Test Year",
+
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75017' and T.CODE = '0085' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Source Plasma, Anti-D, GHA",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75024' and T.CODE = '0108' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "RABIES 60 DAY TITER",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75027' and T.CODE = '0107' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Source Plasma, HAV, GHA",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75031' and T.CODE = '0105' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Source Plasma, CMV, GHA",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75034' and T.CODE = '0050' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Source Plasma, Tetanus DP, GHA",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75084' and T.CODE = '0085' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Low Titer Anti-D",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75323' and T.CODE = '0229' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Plasma COVID, First D, Non-GHA",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75324' and T.CODE = '0229' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Source Plasma Non-GHA COVID",
+round((avg(case when NGOWNER.COL$COLLECTION_TYPE_CODES.CODE = '75325' and T.CODE = '0229' then NGOWNER.COL$TEST_RESULTS.RESULT_VALUE end)),3) as "Plasma COVID, First D, GHA"   
+FROM 
+NGOWNER.COL$TEST_RESULTS,
+NGOWNER.COL$TEST_CODES T,
+NGOWNER.COL$COLLECTIONS C,
+NGOWNER.COL$UNITS,
+NGOWNER.COL$COLLECTION_TYPE_CODES
+where 
+T.ID = NGOWNER.COL$TEST_RESULTS.TESTCODE_ID
+and C.ID = NGOWNER.COL$TEST_RESULTS.COLL_ID
+and NGOWNER.COL$UNITS.COLL_ID(+) = C.ID
+and NGOWNER.COL$COLLECTION_TYPE_CODES.ID = C.COLLTYPE_ID
+--and T.NAME like '%TITER%'
+and T.CODE in ('0085','0108','0102','0107','0105','0050','0229')  
+and NGOWNER.COL$COLLECTION_TYPE_CODES.CODE in (
+'75084',
+'75017',
+'75024',
+'75027',
+'75031',
+'75034',
+'75084',
+'75114',
+'75323',
+'75324',
+'75325'
+) 
+and NGOWNER.COL$TEST_RESULTS.RESULT_VALUE != 'NT'
+and NGOWNER.COL$TEST_RESULTS.TEST_DATE between to_date(to_char((add_months(sysdate,-1)),'MM/YYYY'),'MM/YYYY') and to_date(to_char((add_months(sysdate,-0)),'MM/YYYY'),'MM/YYYY')-1
+group by
+C.SITE_ID,
+to_char(NGOWNER.COL$TEST_RESULTS.TEST_DATE,'MM'),
+to_char(NGOWNER.COL$TEST_RESULTS.TEST_DATE,'YYYY')
+order by 3 desc,2
+)
+select
+"Center Code", 
+"FirstDate",
+"LastDate",
+"Donors",
+"Donations",
+"Volume",  
+"Donation Type",
+"Collection Code",
+"AVG Titer Results",
+ "Donations"*"AVG Titer Results" as "Theoretical AntiBodies"
+
+from (
+select distinct
+"Center Code", 
+"FirstDate",
+"LastDate",
+"Donors",
+"Donations",
+"Volume",  
+"Donation Type",
+"Collection Code",
+case when "Collection Code" =  '75017' then "Source Plasma, Anti-D, GHA"
+     when "Collection Code" =  '75024' then "RABIES 60 DAY TITER"
+     when "Collection Code" =  '75027' then "Source Plasma, HAV, GHA"
+     when "Collection Code" =  '75031' then "Source Plasma, CMV, GHA"
+     when "Collection Code" =  '75034' then "Source Plasma, Tetanus DP, GHA"
+     when "Collection Code" =  '75084' then "Low Titer Anti-D"
+     when "Collection Code" =  '75323' then "Plasma COVID, First D, Non-GHA"
+     when "Collection Code" =  '75324' then "Source Plasma Non-GHA COVID"
+     when "Collection Code" =  '75325' then "Plasma COVID, First D, GHA" 
+     end as "AVG Titer Results"
+
+from 
+donations,
+titers
+where
+"Center Code"="TCenter Code"(+)
+)
+order by 1,8
+
+
+
+
+--1528
+
+
+]]>
+	</queryString>
+	<field name="Center Code" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="Center Code"/>
+	</field>
+	<field name="FirstDate" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="FirstDate"/>
+	</field>
+	<field name="LastDate" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="LastDate"/>
+	</field>
+	<field name="Donors" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="Donors"/>
+	</field>
+	<field name="Donations" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="Donations"/>
+	</field>
+	<field name="Volume" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="Volume"/>
+	</field>
+	<field name="Donation Type" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="Donation Type"/>
+	</field>
+	<field name="Collection Code" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="Collection Code"/>
+	</field>
+	<field name="AVG Titer Results" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="AVG Titer Results"/>
+	</field>
+	<field name="Theoretical AntiBodies" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="Theoretical AntiBodies"/>
+	</field>
+	<variable name="Volume1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{Volume}]]></variableExpression>
+	</variable>
+	<variable name="Donations1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{Donations}]]></variableExpression>
+	</variable>
+	<variable name="Donors1" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{Donors}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="15" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="799" height="15" uuid="ba1c95bf-9f05-43bc-a965-b547a5a5384a">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Donation Totals by Type Donation Dates Between: " + new SimpleDateFormat("MM-dd-yyyy").format($F{FirstDate})
+ + " and "+ new SimpleDateFormat("MM-dd-yyyy").format($F{LastDate})]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="15" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="111" height="15" backcolor="#BBBFBF" uuid="7dab9c23-d400-4923-9398-fd440ffbf08c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="f25b477a-ccaa-4823-8ed4-b447eb5b62d1"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Center Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="300" y="0" width="100" height="15" backcolor="#BBBFBF" uuid="d8b9d5d6-b071-41b8-a337-bb7012891ae9">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ddd77692-594f-4614-b519-659d6250bf69"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Donors]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="400" y="0" width="100" height="15" backcolor="#BBBFBF" uuid="ae222226-983a-4d0f-926d-de45ee6800c3">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="afc46a8b-2b93-458f-ad46-9384fb95b563"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Donations]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="500" y="0" width="100" height="15" backcolor="#BBBFBF" uuid="0ad0f711-7eb1-46df-b356-694b82c28d07">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c4ad4a2-33af-4511-8e18-a5ae8b4c9b48"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Volume(liters)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="111" y="0" width="189" height="15" backcolor="#BBBFBF" uuid="29b1e142-d463-4a21-9f1d-ce8d9e343ce4">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c40e720e-8a54-4862-8265-c9d2aa9b0860"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Donation Type]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="600" y="0" width="100" height="15" backcolor="#BBBFBF" uuid="dac2b054-98fb-464c-aa03-7a0b37414886">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="afc46a8b-2b93-458f-ad46-9384fb95b563"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Avg Titer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="700" y="0" width="100" height="15" backcolor="#BBBFBF" uuid="2478993b-b63f-43b2-b9f2-815b2f073417">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c4ad4a2-33af-4511-8e18-a5ae8b4c9b48"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Theor. Antibodies]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="0" y="0" width="111" height="15" uuid="92573131-f156-406d-b855-13d9ef90c8e6">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="f25b477a-ccaa-4823-8ed4-b447eb5b62d1"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Center Code}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="300" y="0" width="100" height="15" uuid="74a56f26-5030-47c1-9f96-0b2c24f475c9">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ddd77692-594f-4614-b519-659d6250bf69"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Donors}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="400" y="0" width="100" height="15" uuid="e6256157-5fde-468d-9256-032404b5248b">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="afc46a8b-2b93-458f-ad46-9384fb95b563"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Donations}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="500" y="0" width="100" height="15" uuid="911ee960-9dff-4876-88e7-3a765b7654c3">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c4ad4a2-33af-4511-8e18-a5ae8b4c9b48"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Volume}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="111" y="0" width="189" height="15" uuid="b90ed001-e78f-413b-8090-1085f91299b2">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c40e720e-8a54-4862-8265-c9d2aa9b0860"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Donation Type}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="600" y="0" width="100" height="15" uuid="33c80d85-bb45-4dce-a8c5-50e73c5ccdd4">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="afc46a8b-2b93-458f-ad46-9384fb95b563"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{AVG Titer Results}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="700" y="0" width="100" height="15" uuid="b821e386-1e97-47df-b785-7a28761f2a08">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c4ad4a2-33af-4511-8e18-a5ae8b4c9b48"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Theoretical AntiBodies}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+		</band>
+	</columnFooter>
+	<summary>
+		<band height="15" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="0" y="0" width="111" height="15" uuid="c1d1c732-d545-4209-97c4-1ae2a138b1a2">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="f25b477a-ccaa-4823-8ed4-b447eb5b62d1"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="111" y="0" width="189" height="15" uuid="a7dfea08-d767-46ad-9649-506de8e2bf8c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ddd77692-594f-4614-b519-659d6250bf69"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Totals:"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="300" y="0" width="100" height="15" uuid="33e5527f-5fc9-42eb-80cb-76b3e93fc662">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="afc46a8b-2b93-458f-ad46-9384fb95b563"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{Donors1}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="400" y="0" width="100" height="15" uuid="dee00d57-9211-4642-a1e1-91ae10ea8035">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c4ad4a2-33af-4511-8e18-a5ae8b4c9b48"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{Donations1}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="500" y="0" width="100" height="15" uuid="73922f65-1488-485b-ae00-257756836f3c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c40e720e-8a54-4862-8265-c9d2aa9b0860"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{Volume1}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="600" y="0" width="100" height="15" uuid="cd55502e-6042-4066-8c48-5e69912b13a0">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c4ad4a2-33af-4511-8e18-a5ae8b4c9b48"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="700" y="0" width="100" height="15" uuid="28b3d9d7-6c51-403c-9609-8e8e71d5adb5">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c40e720e-8a54-4862-8265-c9d2aa9b0860"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>
